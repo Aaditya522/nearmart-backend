@@ -22,11 +22,22 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 /* CORS */
+const allowedOrigins = [
+  "https://nearmart-frontend-seven.vercel.app",
+  "https://nearmart-frontend-2ebf0x7gn-aaditya-bansals-projects-7fa0391f.vercel.app"
+];
+
 app.use(cors({
-    origin: "https://nearmart-frontend-seven.vercel.app",
-    credentials: true,
-  })
-);
+  origin: function (origin, callback) {
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error("Not allowed by CORS"));
+    }
+  },
+  credentials: true,
+}));
+
 
 /* STATIC */
 app.use("/uploads", express.static(path.join(process.cwd(), "uploads")));
@@ -52,12 +63,12 @@ const startServer = async () => {
         collectionName: "sessions",
         ttl: 60 * 60 * SESSION_HOURS
       }),
-      cookie: {
-        httpOnly: true,
-        secure: false,
-        sameSite: "lax",
-        maxAge: 1000 * 60 * 60 * SESSION_HOURS
-      }
+cookie: {
+  httpOnly: true,
+  secure: true,        // REQUIRED on HTTPS
+  sameSite: "none",    // REQUIRED for cross-origin cookies
+  maxAge: 1000 * 60 * 60 * SESSION_HOURS
+}
     }));
 
     app.use("/", authRoutes);
