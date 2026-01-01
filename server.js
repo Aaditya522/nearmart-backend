@@ -18,9 +18,6 @@ import orderRoutes from "./routes/orderRoutes.js";
 
 const app = express();
 
-// =======================
-// BASIC MIDDLEWARE
-// =======================
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
@@ -48,25 +45,20 @@ app.use(cors({
   allowedHeaders: ["Content-Type", "Authorization"]
 }));
 
-// =======================
 // STATIC FILES
-// =======================
 app.use("/uploads", express.static(path.join(process.cwd(), "uploads")));
 
-// =======================
 // DATABASE CONNECTION
-// =======================
 const PORT = process.env.PORT || 5000;
 const MONGO_URI = process.env.MONGO_URI;
 
 const startServer = async () => {
   try {
     await mongoose.connect(MONGO_URI);
-    console.log("✅ MongoDB connected");
+    console.log("MongoDB connected");
 
-    // =======================
     // SESSION CONFIG
-    // =======================
+
     const SESSION_HOURS = 8;
 
     app.use(
@@ -82,16 +74,14 @@ const startServer = async () => {
         }),
         cookie: {
           httpOnly: true,
-          secure: process.env.NODE_ENV === "production",
-          sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+          secure: true,              // REQUIRED on HTTPS
+          sameSite: "none",          // REQUIRED for cross-site
           maxAge: 1000 * 60 * 60 * SESSION_HOURS
         }
       })
     );
 
-    // =======================
     // ROUTES
-    // =======================
     app.use("/", authRoutes);
     app.use("/", productRoutes);
     app.use("/", cartRoutes);
@@ -99,9 +89,6 @@ const startServer = async () => {
     app.use("/", adminRoutes);
     app.use("/", retailerRoutes);
 
-    // =======================
-    // START SERVER
-    // =======================
     app.listen(PORT, () => {
       console.log(`Server running on port ${PORT}`);
     });
