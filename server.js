@@ -8,7 +8,6 @@ import MongoStore from "connect-mongo";
 import cors from "cors";
 import mongoose from "mongoose";
 
-// Routes
 import authRoutes from "./routes/authRoutes.js";
 import productRoutes from "./routes/productRoutes.js";
 import cartRoutes from "./routes/cartRoutes.js";
@@ -18,20 +17,14 @@ import orderRoutes from "./routes/orderRoutes.js";
 
 const app = express();
 
-/* =======================
-   TRUST PROXY (RENDER)
-======================= */
+/* TRUST PROXY (RENDER) */
 app.set("trust proxy", 1);
 
-/* =======================
-   BASIC MIDDLEWARE
-======================= */
+/* BODY PARSERS */
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-/* =======================
-   CORS (CRITICAL)
-======================= */
+/* CORS */
 app.use(
   cors({
     origin: [
@@ -42,26 +35,20 @@ app.use(
     credentials: true,
   })
 );
+app.options("*", cors());
 
-/* =======================
-   STATIC FILES
-======================= */
+/* STATIC */
 app.use("/uploads", express.static(path.join(process.cwd(), "uploads")));
 
-/* =======================
-   DATABASE
-======================= */
+/* DB */
 const PORT = process.env.PORT || 5000;
 const MONGO_URI = process.env.MONGO_URI;
 
 const startServer = async () => {
   try {
     await mongoose.connect(MONGO_URI);
-    console.log("✅ MongoDB connected");
+    console.log("MongoDB connected");
 
-    /* =======================
-       SESSION CONFIG
-    ======================= */
     const SESSION_HOURS = 8;
 
     app.use(
@@ -73,20 +60,16 @@ const startServer = async () => {
         store: MongoStore.create({
           mongoUrl: MONGO_URI,
           collectionName: "sessions",
-          ttl: 60 * 60 * SESSION_HOURS,
         }),
         cookie: {
           httpOnly: true,
-          secure: true,       // REQUIRED (HTTPS)
-          sameSite: "none",   // REQUIRED (cross-site)
+          secure: true,
+          sameSite: "none",
           maxAge: 1000 * 60 * 60 * SESSION_HOURS,
         },
       })
     );
 
-    /* =======================
-       ROUTES
-    ======================= */
     app.use("/", authRoutes);
     app.use("/", productRoutes);
     app.use("/", cartRoutes);
@@ -95,10 +78,10 @@ const startServer = async () => {
     app.use("/", retailerRoutes);
 
     app.listen(PORT, () => {
-      console.log(`🚀 Server running on port ${PORT}`);
+      console.log(`Server running on ${PORT}`);
     });
   } catch (err) {
-    console.error("❌ MongoDB connection failed:", err);
+    console.error(err);
     process.exit(1);
   }
 };
