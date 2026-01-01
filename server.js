@@ -40,7 +40,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use(cors({
   origin: [
     "http://localhost:3000",
-    "https://nearmart-frontend-520xhror7-aaditya-bansals-projects-7fa0391f.vercel.app"
+    "https://nearmart-frontend-seven.vercel.app"
   ],
   credentials: true
 }));
