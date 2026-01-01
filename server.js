@@ -18,37 +18,26 @@ import orderRoutes from "./routes/orderRoutes.js";
 
 const app = express();
 
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// =======================
-// CORS (DEV + PROD)
-// =======================
-// app.use(
-//   cors({
-//     origin: [
-//       true,          // local React
-//       "https://your-frontend.vercel.app" // Vercel/Netlify frontend
-//     ],
-//     credentials: true
-//   })
+
+app.use(
+  cors({
+    origin: [
+      "http://localhost:3000",
+      "https://nearmart-frontend-seven.vercel.app",
+      "https://nearmart-frontend-520xhror7-aaditya-bansals-projects-7fa0391f.vercel.app"
+    ],
+    credentials: true
+  })
+);
 
 
-app.use(cors({
-  origin: [
-    "http://localhost:3000",
-    "https://nearmart-frontend-seven.vercel.app",
-    "https://nearmart-frontend-520xhror7-aaditya-bansals-projects-7fa0391f.vercel.app"
-  ],
-  credentials: true,
-  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-  allowedHeaders: ["Content-Type", "Authorization"]
-}));
-
-// STATIC FILES
 app.use("/uploads", express.static(path.join(process.cwd(), "uploads")));
 
-// DATABASE CONNECTION
+
 const PORT = process.env.PORT || 5000;
 const MONGO_URI = process.env.MONGO_URI;
 
@@ -57,9 +46,6 @@ const startServer = async () => {
     await mongoose.connect(MONGO_URI);
     console.log("MongoDB connected");
 
-    // SESSION CONFIG
-
-    const SESSION_HOURS = 8;
 
     app.use(
       session({
@@ -69,19 +55,18 @@ const startServer = async () => {
         saveUninitialized: false,
         store: MongoStore.create({
           mongoUrl: MONGO_URI,
-          collectionName: "sessions",
-          ttl: 60 * 60 * SESSION_HOURS
+          collectionName: "sessions"
         }),
         cookie: {
           httpOnly: true,
-          secure: true,              // REQUIRED on HTTPS
-          sameSite: "none",          // REQUIRED for cross-site
-          maxAge: 1000 * 60 * 60 * SESSION_HOURS
+          secure: true,      // REQUIRED (Render + HTTPS)
+          sameSite: "none",  // REQUIRED (cross-site)
+          maxAge: 1000 * 60 * 60 * 8
         }
       })
     );
 
-    // ROUTES
+
     app.use("/", authRoutes);
     app.use("/", productRoutes);
     app.use("/", cartRoutes);
@@ -90,11 +75,10 @@ const startServer = async () => {
     app.use("/", retailerRoutes);
 
     app.listen(PORT, () => {
-      console.log(`Server running on port ${PORT}`);
+      console.log(`🚀 Server running on port ${PORT}`);
     });
-
   } catch (err) {
-    console.error("MongoDB connection failed:", err);
+    console.error("❌ MongoDB connection failed:", err);
     process.exit(1);
   }
 };
