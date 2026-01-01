@@ -17,34 +17,30 @@ import orderRoutes from "./routes/orderRoutes.js";
 
 const app = express();
 
+/* TRUST PROXY (RENDER) */
+app.set("trust proxy", 1);
+
 /* BODY PARSERS */
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 /* CORS */
-const allowedOrigins = [
-  "https://nearmart-frontend-seven.vercel.app",
-  "https://nearmart-frontend-2ebf0x7gn-aaditya-bansals-projects-7fa0391f.vercel.app"
-];
-
-app.use(cors({
-  origin: function (origin, callback) {
-    if (!origin || allowedOrigins.includes(origin)) {
-      callback(null, true);
-    } else {
-      callback(new Error("Not allowed by CORS"));
-    }
-  },
-  credentials: true,
-}));
-
+app.use(
+  cors({
+    origin: [
+      "http://localhost:3000",
+      "https://nearmart-frontend-seven.vercel.app",
+    ],
+    credentials: true,
+  })
+);
 
 /* STATIC */
 app.use("/uploads", express.static(path.join(process.cwd(), "uploads")));
 
 /* DB */
 const PORT = process.env.PORT || 5000;
-const MONGO_URI = process.env.MONGO_URI;
+const MONGO_URI = "mongodb://localhost:27017/econ";
 
 const startServer = async () => {
   try {
@@ -53,23 +49,24 @@ const startServer = async () => {
 
     const SESSION_HOURS = 8;
 
-    app.use(session({
-      name: "nearmart.sid",
-      secret: "MY_SECRET_KEY",
-      resave: false,
-      saveUninitialized: false,
-      store: MongoStore.create({
-        mongoUrl: MONGO_URI,
-        collectionName: "sessions",
-        ttl: 60 * 60 * SESSION_HOURS
-      }),
-cookie: {
-  httpOnly: true,
-  secure: true,        // REQUIRED on HTTPS
-  sameSite: "none",    // REQUIRED for cross-origin cookies
-  maxAge: 1000 * 60 * 60 * SESSION_HOURS
-}
-    }));
+    app.use(
+      session({
+        name: "nearmart.sid",
+        secret: process.env.SESSION_SECRET,
+        resave: false,
+        saveUninitialized: false,
+        store: MongoStore.create({
+          mongoUrl: MONGO_URI,
+          collectionName: "sessions",
+        }),
+        cookie: {
+          httpOnly: true,
+          secure: true,
+          sameSite: "none",
+          maxAge: 1000 * 60 * 60 * SESSION_HOURS,
+        },
+      })
+    );
 
     app.use("/", authRoutes);
     app.use("/", productRoutes);
