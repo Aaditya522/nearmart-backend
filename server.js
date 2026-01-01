@@ -17,20 +17,13 @@ import orderRoutes from "./routes/orderRoutes.js";
 
 const app = express();
 
-/* TRUST PROXY (RENDER) */
-app.set("trust proxy", 1);
-
 /* BODY PARSERS */
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 /* CORS */
-app.use(
-  cors({
-    origin: [
-      "http://localhost:3000",
-      "https://nearmart-frontend-seven.vercel.app",
-    ],
+app.use(cors({
+    origin: "https://nearmart-frontend-seven.vercel.app",
     credentials: true,
   })
 );
@@ -49,24 +42,23 @@ const startServer = async () => {
 
     const SESSION_HOURS = 8;
 
-    app.use(
-      session({
-        name: "nearmart.sid",
-        secret: process.env.SESSION_SECRET,
-        resave: false,
-        saveUninitialized: false,
-        store: MongoStore.create({
-          mongoUrl: MONGO_URI,
-          collectionName: "sessions",
-        }),
-        cookie: {
-          httpOnly: true,
-          secure: true,
-          sameSite: "none",
-          maxAge: 1000 * 60 * 60 * SESSION_HOURS,
-        },
-      })
-    );
+    app.use(session({
+      name: "nearmart.sid",
+      secret: "MY_SECRET_KEY",
+      resave: false,
+      saveUninitialized: false,
+      store: MongoStore.create({
+        mongoUrl: MONGO_URI,
+        collectionName: "sessions",
+        ttl: 60 * 60 * SESSION_HOURS
+      }),
+      cookie: {
+        httpOnly: true,
+        secure: false,
+        sameSite: "lax",
+        maxAge: 1000 * 60 * 60 * SESSION_HOURS
+      }
+    }));
 
     app.use("/", authRoutes);
     app.use("/", productRoutes);
