@@ -27,15 +27,23 @@ app.use(express.urlencoded({ extended: true }));
 // =======================
 // CORS (DEV + PROD)
 // =======================
-app.use(
-  cors({
-    origin: [
-      "http://localhost:3000",          // local React
-      "https://your-frontend.vercel.app" // Vercel/Netlify frontend
-    ],
-    credentials: true
-  })
-);
+// app.use(
+//   cors({
+//     origin: [
+//       true,          // local React
+//       "https://your-frontend.vercel.app" // Vercel/Netlify frontend
+//     ],
+//     credentials: true
+//   })
+
+
+app.use(cors({
+  origin: [
+    "http://localhost:3000",
+    "https://nearmart-frontend-520xhror7-aaditya-bansals-projects-7fa0391f.vercel.app"
+  ],
+  credentials: true
+}));
 
 // =======================
 // STATIC FILES
