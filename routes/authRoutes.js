@@ -174,9 +174,7 @@ router.get("/userDetails", async (req, res) => {
       });
     }
 
-    const user = await User.findById(req.session.userId).select(
-      "-pass -__v"
-    );
+    const user = await User.findById(req.session.userId).select("-pass -__v");
 
     if (!user) {
       return res.status(404).json({
