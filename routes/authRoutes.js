@@ -67,6 +67,7 @@ router.post("/signup", uploadShopImage.single("shopImage"), async (req, res) => 
       address,
       city,
       pincode,
+      phone,
       shopName,
       productType,
       serviceablePincodes
@@ -86,7 +87,8 @@ router.post("/signup", uploadShopImage.single("shopImage"), async (req, res) => 
       role,
       status: role === "retailer" ? "pending" : "approved",
       block: false,
-      address: { at: address, city, pincode }
+      address: { at: address, city, pincode },
+      phone,
     };
 
     if (role === "retailer") {
@@ -119,7 +121,7 @@ router.post("/signup", uploadShopImage.single("shopImage"), async (req, res) => 
     res.send("Signup successful");
 
   } catch (err) {
-    console.error("🔥 SIGNUP ERROR:", err);
+    console.error("SIGNUP ERROR: ", err);
     res.status(500).send("Server error");
   }
 }

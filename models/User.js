@@ -25,6 +25,11 @@ const userSchema = new mongoose.Schema(
             city: String,
             pincode: { type: String, required: true }
         },
+        phone: {
+            type: String,
+            required: true,
+            unique: true
+        },
 
         // Retailer-only
         shopName: {
@@ -57,7 +62,7 @@ const userSchema = new mongoose.Schema(
                     return pins.length >= 2 && pins.length <= 6 &&
                         !pins.includes(this.address.pincode);
                 },
-                message:"Retailers must have 2–6 serviceable pincodes excluding shop pincode"
+                message: "Retailers must have 2–6 serviceable pincodes excluding shop pincode"
             }
         }
     },
