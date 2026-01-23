@@ -18,41 +18,49 @@ import orderRoutes from "./routes/orderRoutes.js";
 
 const app = express();
 
-/* ---------------- MIDDLEWARE ---------------- */
+/* ---------------- BASIC MIDDLEWARE ---------------- */
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-/* CORS */
+/* ---------------- CORS ---------------- */
+
 app.use(
   cors({
-    origin: "https://nearmart-frontend-seven.vercel.app" || "http://localhost:3000",
+    origin: process.env.CLIENT_URL,
     credentials: true,
   })
 );
 
-/* STATIC FILES */
+/* ---------------- STATIC FILES ---------------- */
+
 app.use("/uploads", express.static(path.join(process.cwd(), "uploads")));
 
-/* ---------------- DATABASE ---------------- */
+/* ---------------- CONFIG ---------------- */
 
 const PORT = process.env.PORT || 5000;
-const MONGO_URI = process.env.MONGO_URI || "mongodb://127.0.0.1:27017/econ";
+const MONGO_URI = process.env.MONGO_URI;
+
+/* ---------------- START SERVER ---------------- */
 
 const startServer = async () => {
   try {
+    /* ---- MongoDB ---- */
     await mongoose.connect(MONGO_URI);
     console.log("MongoDB connected");
 
-    /* ---------------- SESSION ---------------- */
+    mongoose.connection.on("error", err => {
+      console.error("Mongo runtime error:", err);
+    });
 
+    /* ---- Session ---- */
     const isProd = process.env.NODE_ENV === "production";
     const SESSION_HOURS = 8;
 
     app.use(
       session({
         name: "nearmart.sid",
-        secret: process.env.SESSION_SECRET || "dev_secret_key",
+        secret: process.env.SESSION_SECRET,
         resave: false,
         saveUninitialized: false,
         store: MongoStore.create({
@@ -62,7 +70,7 @@ const startServer = async () => {
         }),
         cookie: {
           httpOnly: true,
-          secure: isProd,                 // HTTPS only in prod
+          secure: isProd,
           sameSite: isProd ? "none" : "lax",
           maxAge: 1000 * 60 * 60 * SESSION_HOURS,
         },
@@ -78,13 +86,13 @@ const startServer = async () => {
     app.use("/", adminRoutes);
     app.use("/", retailerRoutes);
 
-    /* ---------------- START SERVER ---------------- */
+    /* ---------------- LISTEN ---------------- */
 
     app.listen(PORT, () => {
       console.log(`Server running on http://localhost:${PORT}`);
     });
   } catch (err) {
-    console.error("MongoDB connection failed:", err);
+    console.error("❌ MongoDB connection failed:", err.message);
     process.exit(1);
   }
 };
