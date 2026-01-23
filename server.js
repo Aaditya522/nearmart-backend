@@ -18,6 +18,9 @@ import orderRoutes from "./routes/orderRoutes.js";
 
 const app = express();
 
+/* 🔥 REQUIRED FOR RENDER (SECURE COOKIES) */
+app.set("trust proxy", 1);
+
 /* ---------------- BASIC MIDDLEWARE ---------------- */
 
 app.use(express.json());
@@ -27,7 +30,10 @@ app.use(express.urlencoded({ extended: true }));
 
 app.use(
   cors({
-    origin: process.env.CLIENT_URL,
+    origin: [
+      process.env.CLIENT_URL,
+      "http://localhost:3000",
+    ],
     credentials: true,
   })
 );
@@ -39,7 +45,8 @@ app.use("/uploads", express.static(path.join(process.cwd(), "uploads")));
 /* ---------------- CONFIG ---------------- */
 
 const PORT = process.env.PORT || 5000;
-const MONGO_URI = process.env.MONGO_URI || "mongodb://localhost:27017/econ" ;
+const MONGO_URI =
+  process.env.MONGO_URI || "mongodb://127.0.0.1:27017/econ";
 
 /* ---------------- START SERVER ---------------- */
 
@@ -70,7 +77,7 @@ const startServer = async () => {
         }),
         cookie: {
           httpOnly: true,
-          secure: isProd,
+          secure: isProd,          // 🔥 MUST be true on Render
           sameSite: isProd ? "none" : "lax",
           maxAge: 1000 * 60 * 60 * SESSION_HOURS,
         },
@@ -89,10 +96,10 @@ const startServer = async () => {
     /* ---------------- LISTEN ---------------- */
 
     app.listen(PORT, () => {
-      console.log(`Server running on http://localhost:${PORT}`);
+      console.log(`Server running on port ${PORT}`);
     });
   } catch (err) {
-    console.error("❌ MongoDB connection failed:", err.message);
+    console.error("❌ MongoDB connection failed:", err);
     process.exit(1);
   }
 };
