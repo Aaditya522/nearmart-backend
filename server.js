@@ -45,8 +45,7 @@ app.use("/uploads", express.static(path.join(process.cwd(), "uploads")));
 /* ---------------- CONFIG ---------------- */
 
 const PORT = process.env.PORT || 5000;
-const MONGO_URI =
-  process.env.MONGO_URI || "mongodb://127.0.0.1:27017/econ";
+ const MONGO_URI = "mongodb://127.0.0.1:27017/econ" || process.env.MONGO_URI;
 
 /* ---------------- START SERVER ---------------- */
 
