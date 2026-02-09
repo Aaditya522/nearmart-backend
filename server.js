@@ -18,48 +18,34 @@ import orderRoutes from "./routes/orderRoutes.js";
 
 const app = express();
 
-/* 🔥 REQUIRED FOR RENDER (SECURE COOKIES) */
+/* REQUIRED FOR RENDER (SECURE COOKIES) */
 app.set("trust proxy", 1);
 
 /* ---------------- BASIC MIDDLEWARE ---------------- */
-
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 /* ---------------- CORS ---------------- */
-
 app.use(
   cors({
-    origin: [
-      process.env.CLIENT_URL,
-      "http://localhost:3000",
-    ],
+    origin: [process.env.CLIENT_URL],
     credentials: true,
   })
 );
 
 /* ---------------- STATIC FILES ---------------- */
-
 app.use("/uploads", express.static(path.join(process.cwd(), "uploads")));
 
 /* ---------------- CONFIG ---------------- */
-
 const PORT = process.env.PORT || 5000;
- const MONGO_URI = "mongodb://127.0.0.1:27017/econ" || process.env.MONGO_URI;
+const MONGO_URI = process.env.MONGO_URI;
 
 /* ---------------- START SERVER ---------------- */
-
 const startServer = async () => {
   try {
-    /* ---- MongoDB ---- */
     await mongoose.connect(MONGO_URI);
     console.log("MongoDB connected");
 
-    mongoose.connection.on("error", err => {
-      console.error("Mongo runtime error:", err);
-    });
-
-    /* ---- Session ---- */
     const isProd = process.env.NODE_ENV === "production";
     const SESSION_HOURS = 8;
 
@@ -76,7 +62,7 @@ const startServer = async () => {
         }),
         cookie: {
           httpOnly: true,
-          secure: isProd,          // 🔥 MUST be true on Render
+          secure: isProd,            // 🔥 REQUIRED on Render
           sameSite: isProd ? "none" : "lax",
           maxAge: 1000 * 60 * 60 * SESSION_HOURS,
         },
@@ -84,7 +70,6 @@ const startServer = async () => {
     );
 
     /* ---------------- ROUTES ---------------- */
-
     app.use("/", authRoutes);
     app.use("/", productRoutes);
     app.use("/", cartRoutes);
@@ -92,13 +77,11 @@ const startServer = async () => {
     app.use("/", adminRoutes);
     app.use("/", retailerRoutes);
 
-    /* ---------------- LISTEN ---------------- */
-
     app.listen(PORT, () => {
       console.log(`Server running on port ${PORT}`);
     });
   } catch (err) {
-    console.error("❌ MongoDB connection failed:", err);
+    console.error("MongoDB connection failed:", err);
     process.exit(1);
   }
 };
