@@ -18,7 +18,14 @@ import orderRoutes from "./routes/orderRoutes.js";
 
 const app = express();
 
-/* REQUIRED FOR RENDER (SECURE COOKIES) */
+// --- HARDCODED CONFIGURATION FOR DEPLOYMENT ---
+const PORT = process.env.PORT || 5000;
+const MONGO_URI = "mongodb+srv://aaditya_db:aaditya2246@cluster0.jlajnyc.mongodb.net/test?retryWrites=true&w=majority";
+const CLIENT_URL = "https://nearmart-frontend-twgi.onrender.com";
+const SESSION_SECRET = "nearmart_super_secret_123"; 
+const NODE_ENV = "production"; 
+
+/* REQUIRED FOR RENDER (Allows secure cookies over proxy) */
 app.set("trust proxy", 1);
 
 /* ---------------- BASIC MIDDLEWARE ---------------- */
@@ -28,57 +35,54 @@ app.use(express.urlencoded({ extended: true }));
 /* ---------------- CORS ---------------- */
 app.use(
   cors({
-    origin: [process.env.CLIENT_URL],
+    origin: CLIENT_URL,
     credentials: true,
+  })
+);
+
+/* ---------------- SESSION SETUP ---------------- */
+// Session must be defined BEFORE routes
+const SESSION_HOURS = 8;
+app.use(
+  session({
+    name: "nearmart.sid",
+    secret: SESSION_SECRET,
+    resave: false,
+    saveUninitialized: false,
+    store: MongoStore.create({
+      mongoUrl: MONGO_URI,
+      collectionName: "sessions",
+      ttl: 60 * 60 * SESSION_HOURS,
+    }),
+    cookie: {
+      httpOnly: true,
+      secure: true, // Forced true for Render HTTPS
+      sameSite: "none", // Required for cross-domain cookies
+      maxAge: 1000 * 60 * 60 * SESSION_HOURS,
+    },
   })
 );
 
 /* ---------------- STATIC FILES ---------------- */
 app.use("/uploads", express.static(path.join(process.cwd(), "uploads")));
 
-/* ---------------- CONFIG ---------------- */
-const PORT = process.env.PORT || 5000;
-const MONGO_URI = process.env.MONGO_URI;
+/* ---------------- ROUTES ---------------- */
+app.use("/", authRoutes);
+app.use("/", productRoutes);
+app.use("/", cartRoutes);
+app.use("/", orderRoutes);
+app.use("/", adminRoutes);
+app.use("/", retailerRoutes);
 
 /* ---------------- START SERVER ---------------- */
 const startServer = async () => {
   try {
     await mongoose.connect(MONGO_URI);
-    console.log("MongoDB connected");
-
-    const isProd = process.env.NODE_ENV === "production";
-    const SESSION_HOURS = 8;
-
-    app.use(
-      session({
-        name: "nearmart.sid",
-        secret: process.env.SESSION_SECRET,
-        resave: false,
-        saveUninitialized: false,
-        store: MongoStore.create({
-          mongoUrl: MONGO_URI,
-          collectionName: "sessions",
-          ttl: 60 * 60 * SESSION_HOURS,
-        }),
-        cookie: {
-          httpOnly: true,
-          secure: isProd,            // 🔥 REQUIRED on Render
-          sameSite: isProd ? "none" : "lax",
-          maxAge: 1000 * 60 * 60 * SESSION_HOURS,
-        },
-      })
-    );
-
-    /* ---------------- ROUTES ---------------- */
-    app.use("/", authRoutes);
-    app.use("/", productRoutes);
-    app.use("/", cartRoutes);
-    app.use("/", orderRoutes);
-    app.use("/", adminRoutes);
-    app.use("/", retailerRoutes);
+    console.log("MongoDB connected successfully");
 
     app.listen(PORT, () => {
       console.log(`Server running on port ${PORT}`);
+      console.log(`CORS allowed for: ${CLIENT_URL}`);
     });
   } catch (err) {
     console.error("MongoDB connection failed:", err);
